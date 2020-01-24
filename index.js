@@ -40,8 +40,17 @@ async function fetchGameDetail(id, ...arg) {
   }
   // console.log('liveText', pid)
   spinner.stop()
+
+  let beforeScore = [0, 0]
+
   liveText.forEach(text => {
-    console.log(chalk.blueBright(text.time), text.event, chalk.cyanBright(`(${text.awayScore}) ${homeName} VS ${awayName} (${text.homeScore})`))
+    let scoreText = ''
+    // 分数发生改变
+    if (beforeScore[0] !== text.awayScore || beforeScore[1] !== text.homeScore) {
+      scoreText = chalk.cyanBright(`(${text.awayScore}) ${homeName} VS ${awayName} (${text.homeScore})`)
+      beforeScore = [text.awayScore, text.homeScore]
+    }
+    console.log(chalk.blueBright(text.time), text.event, scoreText)
   })
   setTimeout(() => {
     fetchGameDetail(id, pid)
