@@ -1,9 +1,7 @@
 const request = require('request-promise-native')
 const moment = require('moment')
-const response = require('./response.json')
-// import moment from 'moment'
+const JSDOM = require('jsdom').JSDOM
 
-console.log()
 /**
  *
  * @param {Date} date 日期类型
@@ -66,15 +64,13 @@ async function delay() {
  */
 async function hupuDetailFetcher(id, pid) {
   // console.log(`https://m.hupu.com/api/nba/game/getlastdata?gameid=${id}&pid=${pid || 0}`)
-  /*
   const result = await request({
     method: 'POST',
     uri: `https://m.hupu.com/api/nba/game/getlastdata?gameid=${id}&pid=${pid || 0}`,
     json: true
   })
-  */
-  await delay()
-  const result = response
+  // await delay()
+  // const result = response
 
   // console.log('detail', result)
   // 有数据返回，404为无更新
@@ -91,15 +87,48 @@ async function hupuDetailFetcher(id, pid) {
         event: item.event,
         time: item.left_time,
         homeScore: item.home_score,
-        awayScore: item.away_score
+        awayScore: item.away_score,
+        scoreChange: !!item.score_change
       })).reverse(),
       pid: result.data.prevpid,
-      status: 200
+      status: 200,
+      quarter: result.data.process.split('剩')[0],
+      process: result.data.process
     }
   }
 
   return {
     status: 404
+  }
+}
+
+/**
+ * @description  获取初始pid
+ * @param {String} id 比赛的id
+ */
+exports.hupuInitFetcher = async function(id) {
+  const html = await request({
+    method: 'GET',
+    uri: `https://m.hupu.com/nba/game/playbyplay_${id}.html`,
+    headers: {
+      referer: 'https://m.hupu.com/nba/game',
+      origin: 'https://m.hupu.com',
+    }
+  })
+
+  const dom = new JSDOM(html)
+  const body = dom.window.document.body
+  const element = body.querySelector('.match-live')
+  const prevId = element.attributes['prev-id']
+  const nextId = element.attributes['next-id']
+  const isover = element.attributes['isover'].value
+
+  // console.log('prevId', prevId, 'nextId', nextId)
+  return {
+    // 已结束赛事没有该数据
+    prevId: prevId ? prevId.value : null,
+    nextId: nextId ? nextId.value : null,
+    isover
   }
 }
 
@@ -118,4 +147,3 @@ exports.generateGameDetailFetcher = function(channel) {
     return hupuDetailFetcher
   }
 }
-// generateGameListFetcher()()

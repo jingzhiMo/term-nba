@@ -3,7 +3,8 @@ const chalk = require('chalk')
 const ora = require('ora')
 const {
   generateGameListFetcher,
-  generateGameDetailFetcher
+  generateGameDetailFetcher,
+  hupuInitFetcher
 } = require('./game')
 
 let spinner
@@ -28,33 +29,34 @@ async function fetchGameDetail(id, ...arg) {
   const {
     liveText,
     pid,
-    status
+    status,
+    quarter
   } = result
 
   // 直播信息没有更新
   if (status === 404) {
+    spinner.text = '等待下一次请求...'
+    spinner.color = 'yellow'
     setTimeout(() => {
-      fetchGameDetail(id, ...args)
-    }, 5000)
+      fetchGameDetail(id, ...arg)
+    }, 10000)
     return
   }
   // console.log('liveText', pid)
   spinner.stop()
 
-  let beforeScore = [0, 0]
-
   liveText.forEach(text => {
     let scoreText = ''
     // 分数发生改变
-    if (beforeScore[0] !== text.awayScore || beforeScore[1] !== text.homeScore) {
-      scoreText = chalk.cyanBright(`(${text.awayScore}) ${homeName} VS ${awayName} (${text.homeScore})`)
+    if (text.scoreChange) {
+      scoreText = chalk.cyanBright(`(${text.awayScore}) ${awayName} VS ${homeName} (${text.homeScore})`)
       beforeScore = [text.awayScore, text.homeScore]
     }
-    console.log(chalk.blueBright(text.time), text.event, scoreText)
+    console.log(chalk.blueBright(quarter + ': ' + text.time), text.event, scoreText)
   })
   setTimeout(() => {
     fetchGameDetail(id, pid)
-  }, 5000)
+  }, 10000)
   console.log('---------------')
   spinner.text = '等待下一次请求...'
   spinner.color = 'yellow'
@@ -91,13 +93,17 @@ async function run() {
     choices: gameList
   })
 
-  // console.log(result)
+  // console.log(gameList)
   let game = gameList.filter(g => g.value === id)[0]
 
   homeName = game.homeName
   awayName = game.awayName
-  gameDetailFetcher = generateGameDetailFetcher()
-  fetchGameDetail(id)
+
+  let { nextId } = await hupuInitFetcher(id)
+
+  console.log('nextId', nextId)
+  // gameDetailFetcher = generateGameDetailFetcher()
+  fetchGameDetail(id, nextId)
 }
 
 run()
