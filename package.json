@@ -16,6 +16,7 @@
   "dependencies": {
     "chalk": "^3.0.0",
     "inquirer": "^7.0.3",
+    "jsdom": "^16.0.1",
     "moment": "^2.24.0",
     "ora": "^4.0.3",
     "request": "^2.88.0",
