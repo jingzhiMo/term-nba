@@ -42,7 +42,6 @@ async function fetchGameDetail(id, ...arg) {
     }, 10000)
     return
   }
-  // console.log('liveText', pid)
   spinner.stop()
 
   liveText.forEach(text => {
@@ -60,9 +59,67 @@ async function fetchGameDetail(id, ...arg) {
   console.log('---------------')
   spinner.text = '等待下一次请求...'
   spinner.color = 'yellow'
-  spinner.start()
 }
 
+/**
+ * @description 显示列表
+ */
+async function promptGameList(gameList) {
+  const selectGame = gameList.filter(game => game.status === '2')
+  const gameListPrompt = {
+    type: 'list',
+    name: 'id',
+    message: '选择比赛场次',
+    choices: gameList,
+    default: selectGame.length ? selectGame[0].value: undefined
+  }
+  let { id } = await inquirer.prompt(gameListPrompt)
+
+  let game = gameList.filter(g => g.value === id)[0]
+
+  homeName = game.homeName
+  awayName = game.awayName
+
+  // 已结束
+  if (game.status === '1') {
+    console.log('该比赛已结束')
+    console.log(chalk.cyanBright(game.match))
+    console.log()
+
+    const { isContinue } = await inquirer.prompt({
+      type: 'list',
+      name: 'isContinue',
+      message: '是否选择其他比赛？',
+      choices: [
+        { value: 1, name: '是' },
+        { value: 0, name: '否' }
+      ]
+    })
+
+    if (isContinue) {
+      promptGameList(gameList)
+    } else {
+      process.exit(1)
+    }
+  } else {
+    fetchGame(id)
+  }
+}
+
+/**
+ * @description  获取比赛数据
+ * @param  {String} id 比赛场次对应的id
+ */
+async function fetchGame(id) {
+  let { nextId } = await hupuInitFetcher(id)
+
+  gameDetailFetcher = generateGameDetailFetcher()
+  fetchGameDetail(id, nextId)
+}
+
+/**
+ * @description 启动显示
+ */
 async function run() {
   const { channel } = await inquirer.prompt([{
       type: 'list',
@@ -75,35 +132,14 @@ async function run() {
       ]
   }])
 
-  // console.log('answer', CHANNEL[channel])
-  // console.log()
   spinner = ora({
     text: '加载比赛列表...',
     color: 'blue'
   }).start()
-  // console.log(chalk.greenBright('加载比赛列表...'))
-  // console.log()
   const gameList = await generateGameListFetcher()()
 
   spinner.stop()
-  const { id } = await inquirer.prompt({
-    type: 'list',
-    name: 'id',
-    message: '选择比赛场次',
-    choices: gameList
-  })
-
-  // console.log(gameList)
-  let game = gameList.filter(g => g.value === id)[0]
-
-  homeName = game.homeName
-  awayName = game.awayName
-
-  let { nextId } = await hupuInitFetcher(id)
-
-  console.log('nextId', nextId)
-  // gameDetailFetcher = generateGameDetailFetcher()
-  fetchGameDetail(id, nextId)
+  promptGameList(gameList)
 }
 
 run()

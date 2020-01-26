@@ -12,7 +12,6 @@ async function hupuListFetcher(date, order) {
   date = moment(Date.now() - 86400000).format('YYYY-MM-DD')
   order = order || 1
 
-  // console.log('uri', `https://m.hupu.com/api/nba/gameslist?order=${order}&date=${date}`)
   const { data } = await request({
     method: 'POST',
     uri: `https://m.hupu.com/api/nba/gameslist?order=${order}&date=${date}`,
@@ -35,13 +34,14 @@ async function hupuListFetcher(date, order) {
       // } else {
       //   // 进行中
       // }
-      let match = `(${item.home.score}) ${item.home.name} VS ${item.away.name} (${item.away.score})`
+      let match = `(${item.away.score}) ${item.away.name} VS ${item.home.name} (${item.home.score}) `
 
       return {
         value: item.match_id,
         status: item.status,
         homeName: item.home.name,
         awayName: item.away.name,
+        match: match,
         name: `${match} -- ${item.process}`
       }
     })
@@ -58,6 +58,7 @@ async function delay() {
     }, 3000)
   })
 }
+
 /**
  * @param {String} id gameId 比赛的id
  * @param {String} pid 每次请求对应的唯一id
