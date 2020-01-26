@@ -20,25 +20,24 @@ const CHANNEL = {
 }
 let gameDetailFetcher
 
-async function fetchGameDetail(id, ...arg) {
+async function fetchGameDetail(id, nextId) {
   spinner.text = '加载比赛信息...'
   spinner.color = 'green'
   spinner.start()
 
-  const result = await gameDetailFetcher(id, ...arg)
   const {
     liveText,
     pid,
     status,
     quarter
-  } = result
+  } = await gameDetailFetcher(id, nextId)
 
   // 直播信息没有更新
   if (status === 404) {
     spinner.text = '等待下一次请求...'
     spinner.color = 'yellow'
     setTimeout(() => {
-      fetchGameDetail(id, ...arg)
+      fetchGameDetail(id, nextId)
     }, 10000)
     return
   }
