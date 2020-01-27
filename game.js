@@ -26,14 +26,6 @@ async function hupuListFetcher(date, order) {
 
   Object.keys(data).forEach(id => {
     const info = data[id].gameinfo.map(item => {
-      // 未开始
-      // if (item.status === 3) {
-      //   // ..
-      // } else if (item.status === 1) {
-      //   // 已结束
-      // } else {
-      //   // 进行中
-      // }
       let match = `(${item.away.score}) ${item.away.name} VS ${item.home.name} (${item.home.score}) `
 
       return {
@@ -47,16 +39,7 @@ async function hupuListFetcher(date, order) {
     })
     gameinfo.push(...info)
   })
-  // console.log('result', gameinfo)
   return gameinfo.sort((a, b) => a.status - b.status)
-}
-
-async function delay() {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve()
-    }, 3000)
-  })
 }
 
 /**
@@ -64,16 +47,11 @@ async function delay() {
  * @param {String} pid 每次请求对应的唯一id
  */
 async function hupuDetailFetcher(id, pid) {
-  // console.log(`https://m.hupu.com/api/nba/game/getlastdata?gameid=${id}&pid=${pid || 0}`)
   const result = await request({
     method: 'POST',
     uri: `https://m.hupu.com/api/nba/game/getlastdata?gameid=${id}&pid=${pid || 0}`,
     json: true
   })
-  // await delay()
-  // const result = response
-
-  // console.log('detail', result)
   // 有数据返回，404为无更新
   if (result && result.status === '200') {
     let liveText = result.data.liveText
@@ -124,7 +102,6 @@ exports.hupuInitFetcher = async function(id) {
   const nextId = element.attributes['next-id']
   const isover = element.attributes['isover'].value
 
-  // console.log('prevId', prevId, 'nextId', nextId)
   return {
     // 已结束赛事没有该数据
     prevId: prevId ? prevId.value : null,
