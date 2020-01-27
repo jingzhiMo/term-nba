@@ -1,13 +1,12 @@
 const inquirer = require('inquirer')
 const chalk = require('chalk')
-const ora = require('ora')
 const {
   generateGameListFetcher,
   generateGameDetailFetcher,
   hupuInitFetcher
 } = require('./game')
+const spinner = require('./spinner')
 
-let spinner
 // 主客队名称
 let homeName
 let awayName
@@ -20,10 +19,13 @@ const CHANNEL = {
 }
 let gameDetailFetcher
 
+/**
+ * @description 获取比赛详情
+ * @param {String} id 比赛的id
+ * @param {String} nextId 下一页详情的页码
+ */
 async function fetchGameDetail(id, nextId) {
-  spinner.text = '加载比赛信息...'
-  spinner.color = 'green'
-  spinner.start()
+  spinner.loadingDetail()
 
   const {
     liveText,
@@ -34,15 +36,13 @@ async function fetchGameDetail(id, nextId) {
 
   // 直播信息没有更新
   if (status === 404) {
-    spinner.text = '等待下一次请求...'
-    spinner.color = 'yellow'
-    setTimeout(() => {
-      fetchGameDetail(id, nextId)
-    }, 10000)
+    spinner.waiting()
+    delayFetchGameDetail(id, nextId)
     return
   }
-  spinner.stop()
 
+  spinner.stop()
+  spinner.clear()
   liveText.forEach(text => {
     let scoreText = ''
     // 分数发生改变
@@ -52,20 +52,34 @@ async function fetchGameDetail(id, nextId) {
     }
     console.log(chalk.blueBright(quarter + ': ' + text.time), text.event, scoreText)
   })
-  setTimeout(() => {
-    fetchGameDetail(id, pid)
-  }, 10000)
+  delayFetchGameDetail(id, pid)
   console.log('---------------')
-  spinner.text = '等待下一次请求...'
-  spinner.color = 'yellow'
+  spinner.waiting()
+}
+
+/**
+ *
+ * @param {String} id 比赛的id
+ * @param {String} pid 下一页详情的页码
+ * @param {Number} delay 延迟获取比赛详情，默认10s(可选)
+ */
+function delayFetchGameDetail(id, pid, delay = 10000) {
+    setTimeout(() => {
+      fetchGameDetail(id, pid)
+    }, delay)
 }
 
 /**
  * @description 显示列表
  */
 async function promptGameList(gameList) {
-  const selectGame = gameList.filter(game => game.status === '2')
-  const gameListPrompt = {
+  // status=2 为进行中
+  let selectGame = gameList.filter(game => game.status === '2')
+  let gameListPrompt
+
+  // status = 3 为未开始
+  selectGame = selectGame.length ? selectGame : gameList.filter(game => game.status === '3')
+  gameListPrompt = {
     type: 'list',
     name: 'id',
     message: '选择比赛场次',
@@ -73,16 +87,15 @@ async function promptGameList(gameList) {
     default: selectGame.length ? selectGame[0].value: undefined
   }
   let { id } = await inquirer.prompt(gameListPrompt)
-
   let game = gameList.filter(g => g.value === id)[0]
 
   homeName = game.homeName
   awayName = game.awayName
 
-  // 已结束
-  if (game.status === '1') {
-    console.log('该比赛已结束')
-    console.log(chalk.cyanBright(game.match))
+  // 已结束/未开始
+  if (game.status === '1' || game.status === '3') {
+    console.log()
+    console.log(`该比赛${game.status === '1' ? '已结束' : '未开始'}`, chalk.greenBright(game.match))
     console.log()
 
     const { isContinue } = await inquirer.prompt({
@@ -101,7 +114,7 @@ async function promptGameList(gameList) {
       process.exit(1)
     }
   } else {
-    fetchGame(id)
+    fetchInitGame(id)
   }
 }
 
@@ -109,7 +122,7 @@ async function promptGameList(gameList) {
  * @description  获取比赛数据
  * @param  {String} id 比赛场次对应的id
  */
-async function fetchGame(id) {
+async function fetchInitGame(id) {
   let { nextId } = await hupuInitFetcher(id)
 
   gameDetailFetcher = generateGameDetailFetcher()
@@ -131,10 +144,7 @@ async function run() {
       ]
   }])
 
-  spinner = ora({
-    text: '加载比赛列表...',
-    color: 'blue'
-  }).start()
+  spinner.loadingList()
   const gameList = await generateGameListFetcher()()
 
   spinner.stop()
