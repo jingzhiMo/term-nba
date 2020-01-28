@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const inquirer = require('inquirer')
 const chalk = require('chalk')
 const program = require('commander')
