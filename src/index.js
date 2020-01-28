@@ -1,5 +1,6 @@
 const inquirer = require('inquirer')
 const chalk = require('chalk')
+const program = require('commander')
 
 const {
   generateGameListFetcher,
@@ -12,14 +13,20 @@ const KBListener = require('./keybroad-listener')()
 // 主客队名称
 let homeName
 let awayName
-
-// 提供选择的渠道
-const CHANNEL = {
-  'hupu': 'https://m.hupu.com',
-  'zhiboba': 'https://zhiboba.com',
-  'tencent': 'https://sports.qq.com'
-}
 let gameDetailFetcher
+
+// TODO 暂时只提供虎扑，后续支持其他渠道
+// const CHANNEL = {
+//   'hupu': 'https://m.hupu.com',
+//   'zhiboba': 'https://zhiboba.com',
+//   'tencent': 'https://sports.qq.com'
+// }
+
+program.option('-t, --time <number>', '请求比赛的时间间隔，单位：秒，最小值为5', parseInt)
+program.parse(process.argv)
+
+// 请求游戏之间的间隔，默认10s
+const GAME_DELAY = program.time ? (program.time < 5 ? 5000 : program.time * 1000) : 10000
 
 /**
  * @description 获取比赛详情
@@ -63,12 +70,11 @@ async function fetchGameDetail(id, nextId) {
  *
  * @param {String} id 比赛的id
  * @param {String} pid 下一页详情的页码
- * @param {Number} delay 延迟获取比赛详情，默认10s(可选)
  */
-function delayFetchGameDetail(id, pid, delay = 10000) {
+function delayFetchGameDetail(id, pid) {
     setTimeout(() => {
       fetchGameDetail(id, pid)
-    }, delay)
+    }, GAME_DELAY)
 }
 
 /**
