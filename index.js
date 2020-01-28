@@ -1,11 +1,13 @@
 const inquirer = require('inquirer')
 const chalk = require('chalk')
+
 const {
   generateGameListFetcher,
   generateGameDetailFetcher,
   hupuInitFetcher
 } = require('./game')
 const spinner = require('./spinner')
+const KBListener = require('./keybroad-listener')()
 
 // 主客队名称
 let homeName
@@ -93,7 +95,7 @@ async function promptGameList(gameList) {
   awayName = game.awayName
 
   // 已结束/未开始
-  if (game.status === '1' || game.status === '3') {
+  if (game.status === '4' || game.status === '3') {
     console.log()
     console.log(`该比赛${game.status === '1' ? '已结束' : '未开始'}`, chalk.greenBright(game.match))
     console.log()
@@ -114,6 +116,7 @@ async function promptGameList(gameList) {
       process.exit(1)
     }
   } else {
+    KBListener.start()
     fetchInitGame(id)
   }
 }
@@ -133,22 +136,27 @@ async function fetchInitGame(id) {
  * @description 启动显示
  */
 async function run() {
-  const { channel } = await inquirer.prompt([{
-      type: 'list',
-      name: 'channel',
-      message: '选择加载渠道',
-      choices: [
-        { name: '虎扑', value: 'hupu' },
-        { name: '直播吧', value: 'zhiboba' },
-        { name: '腾讯直播', value: 'tencent' }
-      ]
-  }])
-
+  // TODO 暂时注释多渠道入口，默认为虎扑
+  // const { channel } = await inquirer.prompt([{
+  //     type: 'list',
+  //     name: 'channel',
+  //     message: '选择加载渠道',
+  //     choices: [
+  //       { name: '虎扑', value: 'hupu' },
+  //       { name: '直播吧', value: 'zhiboba' },
+  //       { name: '腾讯直播', value: 'tencent' }
+  //     ]
+  // }])
   spinner.loadingList()
+  // 获取当日所有比赛列表
   const gameList = await generateGameListFetcher()()
 
   spinner.stop()
   promptGameList(gameList)
 }
 
+KBListener.init(() => {
+  run()
+  spinner.stop()
+})
 run()

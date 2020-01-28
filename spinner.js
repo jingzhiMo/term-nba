@@ -6,7 +6,7 @@ const spinner = ora({
 
 module.exports = {
   waiting() {
-    spinner.text = '等待下一次请求...'
+    spinner.text = '等待下一次请求...(ctrl + d 返回比赛列表)'
     spinner.color = 'yellow'
     spinner.start()
   },
@@ -16,7 +16,7 @@ module.exports = {
     spinner.start()
   },
   loadingDetail() {
-    spinner.text = '加载比赛信息...'
+    spinner.text = '加载比赛信息...(ctrl + d 返回比赛列表)'
     spinner.color = 'green'
     spinner.start()
   },
