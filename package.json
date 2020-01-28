@@ -2,17 +2,20 @@
   "name": "term-nba",
   "version": "1.0.0",
   "description": "terminal-nba 在终端看NBA文字直播",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "main": "src/index.js",
+  "bin": {
+    "term-nba": "./src/index.js"
   },
   "repository": {
     "type": "git",
-    "url": "git@github:jingzhiMo/term-nba.git"
+    "url": "git@github.com:jingzhiMo/term-nba.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "nba",
+    "terminal"
+  ],
+  "author": "mojingzhi.mail@gmail.com",
+  "license": "MIT",
   "dependencies": {
     "chalk": "^3.0.0",
     "commander": "^4.1.0",
