@@ -95,7 +95,7 @@ async function promptGameList(gameList) {
   awayName = game.awayName
 
   // 已结束/未开始
-  if (game.status === '4' || game.status === '3') {
+  if (game.status === '1' || game.status === '3') {
     console.log()
     console.log(`该比赛${game.status === '1' ? '已结束' : '未开始'}`, chalk.greenBright(game.match))
     console.log()
