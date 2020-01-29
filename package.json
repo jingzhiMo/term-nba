@@ -1,6 +1,6 @@
 {
   "name": "term-nba",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "terminal-nba 在终端看NBA文字直播",
   "main": "src/index.js",
   "bin": {
