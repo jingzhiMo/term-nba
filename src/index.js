@@ -28,6 +28,7 @@ program.parse(process.argv)
 
 // 请求游戏之间的间隔，默认10s
 const GAME_DELAY = program.time ? (program.time < 5 ? 5000 : program.time * 1000) : 10000
+let delayTimer
 
 /**
  * @description 获取比赛详情
@@ -73,9 +74,9 @@ async function fetchGameDetail(id, nextId) {
  * @param {String} pid 下一页详情的页码
  */
 function delayFetchGameDetail(id, pid) {
-    setTimeout(() => {
-      fetchGameDetail(id, pid)
-    }, GAME_DELAY)
+  delayTimer = setTimeout(() => {
+    fetchGameDetail(id, pid)
+  }, GAME_DELAY)
 }
 
 /**
@@ -165,5 +166,6 @@ async function run() {
 KBListener.init(() => {
   run()
   spinner.stop()
+  clearTimeout(delayTimer)
 })
 run()
