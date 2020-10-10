@@ -9,7 +9,7 @@ const JSDOM = require('jsdom').JSDOM
  */
 async function hupuListFetcher(date, order) {
   // 默认请求当天的比赛列表
-  date = moment(Date.now() - 86400000).format('YYYY-MM-DD')
+  date = moment(Date.now() - 2 * 86400000).format('YYYY-MM-DD')
   order = order || 1
 
   const { data } = await request({
@@ -23,8 +23,12 @@ async function hupuListFetcher(date, order) {
     json: true
   })
   let gameinfo = []
+  const midnight = new Date().setHours(0, 0, 0, 0) / 1000
 
-  Object.keys(data).forEach(id => {
+  // 没有比赛
+  if (typeof data === 'string') return []
+
+  Object.keys(data).filter(time => Number(time) >= midnight).forEach(id => {
     const info = data[id].gameinfo.map(item => {
       let match = `(${item.away.score}) ${item.away.name} VS ${item.home.name} (${item.home.score}) `
 
